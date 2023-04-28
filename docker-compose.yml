@@ -5,7 +5,7 @@ services:
     user: root
     hostname: spark-master
     working_dir: /opt/spark
-    image: apache/spark-py:v3.4.0
+    build: .
     environment:
       - SPARK_NO_DAEMONIZE=true
     volumes:
@@ -18,7 +18,7 @@ services:
   spark-worker:
     user: root
     working_dir: /opt/spark
-    image: apache/spark-py:v3.4.0
+    build: .
     environment:
       - SPARK_NO_DAEMONIZE=true
     volumes:

@@ -36,43 +36,32 @@ spark = SparkSession.builder \
         .config("spark.sql.warehouse.dir", WAREHOUSE_PATH) \
         .getOrCreate()
 
-# # Read Parquet file with the defined schema
 tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
-
-# show the first 5 rows
-# tfidf_df.show(5)
-
-# Convert TF-IDF matrix to Pandas DataFrame for easier manipulation
-tfidf_pd = tfidf_df.toPandas()
-
-# Get the union of all vocabularies (features)
-all_vocabulary = set()
-for vocab in tfidf_pd['filtered'].values:
-    all_vocabulary.update(vocab)
-all_vocabulary = list(all_vocabulary)
-
-# Initialize the matrix with zeros
-num_users = len(tfidf_pd)
-num_features = len(all_vocabulary)
-tf_idf_matrix = np.zeros((num_users, num_features))
-
-# Fill the matrix with users' TF-IDF vectors
-for index, row in tfidf_pd.iterrows():
-    vocab = row['filtered']
-    tf_idf_values = row['tf_idf']
-    for word, value in zip(vocab, tf_idf_values):
-        col_index = all_vocabulary.index(word)
-        tf_idf_matrix[index, col_index] = value
 
 # http://localhost:8000/api/v1/accounts/
 @app.get("/api/v1/accounts/")
 def get_accounts():
+    # Read Parquet file with the defined schema
+    tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
+    # Convert TF-IDF matrix to Pandas DataFrame for easier manipulation
+    tfidf_pd = tfidf_df.toPandas()
     accounts = tfidf_pd[['username', 'id']].to_dict(orient='records')
     return accounts
+
 
 # http://localhost:8000/api/v1/tf-idf/user-ids/109429260801289174
 @app.get("/api/v1/tf-idf/user-ids/{user_id}")
 def get_tfidf_for_user(user_id: str):
+    # Read Parquet file with the defined schema
+    tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
+    # Convert TF-IDF matrix to Pandas DataFrame for easier manipulation
+    tfidf_pd = tfidf_df.toPandas()
+    # Get the union of all vocabularies (features)
+    all_vocabulary = set()
+    for vocab in tfidf_pd['filtered'].values:
+        all_vocabulary.update(vocab)
+    all_vocabulary = list(all_vocabulary)
+
     target_row = tfidf_pd.loc[tfidf_pd['id'] == user_id]
     if target_row.empty:
         return {}
@@ -85,9 +74,33 @@ def get_tfidf_for_user(user_id: str):
             tfidf_dict[word] = 0
     return tfidf_dict
 
+
 # # http://localhost:8000/api/v1/tf-idf/user-ids/109429260801289174/neighbors
 @app.get("/api/v1/tf-idf/user-ids/{user_id}/neighbors")
 def get_nearest_neighbors(user_id: str, k: int = 10):
+    # Read Parquet file with the defined schema
+    tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
+    # Convert TF-IDF matrix to Pandas DataFrame for easier manipulation
+    tfidf_pd = tfidf_df.toPandas()
+    # Get the union of all vocabularies (features)
+    all_vocabulary = set()
+    for vocab in tfidf_pd['filtered'].values:
+        all_vocabulary.update(vocab)
+    all_vocabulary = list(all_vocabulary)
+
+    # Initialize the matrix with zeros
+    num_users = len(tfidf_pd)
+    num_features = len(all_vocabulary)
+    tf_idf_matrix = np.zeros((num_users, num_features))
+
+    # Fill the matrix with users' TF-IDF vectors
+    for index, row in tfidf_pd.iterrows():
+        vocab = row['filtered']
+        tf_idf_values = row['tf_idf']
+        for word, value in zip(vocab, tf_idf_values):
+            col_index = all_vocabulary.index(word)
+            tf_idf_matrix[index, col_index] = value
+
     target_row = tfidf_pd.loc[tfidf_pd['id'] == user_id]
     target_index = target_row.index[0]
     target_tfidf_array = tf_idf_matrix[target_index].reshape(1, -1)
