@@ -23,7 +23,6 @@ services:
       - SPARK_NO_DAEMONIZE=true
     volumes:
       - datalake:/opt/datalake
-      - spark-worker-data:/opt/spark/work
       - warehouse:/opt/warehouse
     command: ./sbin/start-worker.sh spark://spark-master:7077
   jupyter:
@@ -69,7 +68,6 @@ services:
 volumes:
   datalake:
   warehouse:
-  spark-worker-data:
 
 
 # Test with:
