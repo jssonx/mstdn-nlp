@@ -79,3 +79,4 @@ volumes:
 # docker-compose exec extractor bash
 # docker-compose up -d
 # docker-compose up --scale spark-worker=3
+# docker cp 065ade4fa188:/opt/warehouse ./test-warehouse/

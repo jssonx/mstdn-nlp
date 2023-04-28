@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
+from pyspark.ml.linalg import VectorUDT
 from sklearn.metrics.pairwise import cosine_similarity
 import uvicorn
 import numpy as np
@@ -7,6 +9,18 @@ import numpy as np
 app = FastAPI()
 
 WAREHOUSE_PATH = "/opt/warehouse"
+# WAREHOUSE_PATH = "./warehouse"
+
+# Define schema
+schema = StructType([
+    StructField("id", StringType(), True),
+    StructField("username", StringType(), True),
+    StructField("content", StringType(), True),
+    StructField("tokens", ArrayType(StringType()), True),
+    StructField("filtered", ArrayType(StringType()), True),
+    StructField("tf", VectorUDT(), True),
+    StructField("tf_idf", VectorUDT(), True)
+])
 
 # Load TF-IDF matrix from Parquet file
 # spark = SparkSession.builder \
@@ -21,10 +35,33 @@ spark = SparkSession.builder \
         .config("spark.sql.warehouse.dir", WAREHOUSE_PATH) \
         .getOrCreate()
 
-tfidf_df = spark.read.parquet(WAREHOUSE_PATH)
+# # Read Parquet file with the defined schema
+tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
+
+# show the first 5 rows
+# tfidf_df.show(5)
 
 # Convert TF-IDF matrix to Pandas DataFrame for easier manipulation
 tfidf_pd = tfidf_df.toPandas()
+
+# Get the union of all vocabularies (features)
+all_vocabulary = set()
+for vocab in tfidf_pd['filtered'].values:
+    all_vocabulary.update(vocab)
+all_vocabulary = list(all_vocabulary)
+
+# Initialize the matrix with zeros
+num_users = len(tfidf_pd)
+num_features = len(all_vocabulary)
+tf_idf_matrix = np.zeros((num_users, num_features))
+
+# Fill the matrix with users' TF-IDF vectors
+for index, row in tfidf_pd.iterrows():
+    vocab = row['filtered']
+    tf_idf_values = row['tf_idf']
+    for word, value in zip(vocab, tf_idf_values):
+        col_index = all_vocabulary.index(word)
+        tf_idf_matrix[index, col_index] = value
 
 # http://localhost:8000/api/v1/accounts/
 @app.get("/api/v1/accounts/")
@@ -41,17 +78,21 @@ def get_tfidf_for_user(user_id: str):
     vocabulary = target_row['filtered'].values[0]
     tfidf_values = target_row['tf_idf'].values[0]
     tfidf_dict = dict(zip(vocabulary, tfidf_values))
+    # Add zeros for missing words
+    for word in all_vocabulary:
+        if word not in tfidf_dict:
+            tfidf_dict[word] = 0
     return tfidf_dict
 
-# http://localhost:8000/api/v1/tf-idf/user-ids/109429260801289174/neighbors
+# # http://localhost:8000/api/v1/tf-idf/user-ids/109429260801289174/neighbors
 @app.get("/api/v1/tf-idf/user-ids/{user_id}/neighbors")
 def get_nearest_neighbors(user_id: str, k: int = 10):
     target_row = tfidf_pd.loc[tfidf_pd['id'] == user_id]
-    target_tfidf = target_row['tf_idf'].values[0]
-    target_tfidf_array = np.array(target_tfidf).reshape(1, -1)
-    all_tfidf_matrix = np.vstack(tfidf_pd['tf_idf'].values)
-    cosine_distances = cosine_similarity(target_tfidf_array, all_tfidf_matrix)
-    neighbor_ids = tfidf_pd.loc[np.argsort(cosine_distances.squeeze())[-k:], 'id'].values
+    target_index = target_row.index[0]
+    target_tfidf_array = tf_idf_matrix[target_index].reshape(1, -1)
+    cosine_distances = cosine_similarity(target_tfidf_array, tf_idf_matrix)
+    neighbor_indices = np.argsort(cosine_distances.squeeze())[-k:]
+    neighbor_ids = tfidf_pd.loc[neighbor_indices, 'id'].values
     return neighbor_ids.tolist()
 
 if __name__ == "__main__":
