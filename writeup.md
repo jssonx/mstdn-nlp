@@ -33,3 +33,7 @@ To incorporate these systems, consider these steps:
 2. **API Development**: Create a REST API that can query the storage system and return the results quickly to clients.
 
 By implementing this architecture, you can leverage the strengths of real-time processing systems to improve REST response times and handle online processing tasks more efficiently.
+
+## References
+
+- [Spark Programming Guide](https://spark.apache.org/docs/latest/programming-guide.html)
