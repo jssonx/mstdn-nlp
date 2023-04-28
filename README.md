@@ -18,3 +18,6 @@ This will start up:
     * Note: You need to run the `hello-pyspark` notebook first before this service works: It depends on some data popupated by this notebook.
 
 
+# TODOs
+1. Optimize the storage and update methods for Parquet files in the API to eliminate redundant computations.
+2. Support additional Mastodon servers.
