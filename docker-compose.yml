@@ -53,6 +53,17 @@ services:
     volumes:
       - datalake:/opt/datalake
       - warehouse:/opt/warehouse
+  rest:
+    user: root
+    build:
+      context: ./testapi
+    environment:
+      - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip:/opt/app/
+    volumes:
+      - warehouse:/opt/warehouse
+      - ./testapi:/opt/app   ## uncomment for rapid development.
+    ports:
+      - '8000:8000'
 
 
 volumes:
