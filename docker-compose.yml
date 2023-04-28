@@ -3,12 +3,13 @@ version: '2'
 services:
   spark-master:
     user: root
+    hostname: spark-master
     working_dir: /opt/spark
     image: apache/spark-py:v3.4.0
     environment:
       - SPARK_NO_DAEMONIZE=true
     volumes:
-      - datalake:/opt/data
+      - datalake:/opt/datalake
       - warehouse:/opt/warehouse
     ports:
       - '7077:7077'
@@ -21,22 +22,10 @@ services:
     environment:
       - SPARK_NO_DAEMONIZE=true
     volumes:
-      - datalake:/opt/data
+      - datalake:/opt/datalake
+      - spark-worker-data:/opt/spark/work
       - warehouse:/opt/warehouse
-    # ports:
-    #   - '9000-9010:8081'
     command: ./sbin/start-worker.sh spark://spark-master:7077
-  rest:
-    user: root
-    build:
-      context: ./rest
-    environment:
-      - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip:/opt/app/
-    volumes:
-      - warehouse:/opt/warehouse
-      - ./rest:/opt/app   ## uncomment for rapid development.
-    ports:
-      - '8000:8000'
   jupyter:
     user: root
     working_dir: /opt/spark
@@ -44,15 +33,38 @@ services:
       context: ./jupyter
     volumes:
       - ./sparkcode:/opt/spark/sparkcode
-      - datalake:/opt/data
+      - datalake:/opt/datalake
       - warehouse:/opt/warehouse
     environment:
       - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
     ports:
       - '8888:8888'
     command: jupyter lab --allow-root --NotebookApp.token=secret123 --ip 0.0.0.0 --no-browser
-  
+  extractor:
+    build:
+      context: ./extractor
+    volumes:
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+  tfidf_calculator:
+    build:
+      context: ./sparkcode
+    working_dir: /opt/app
+    volumes:
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+
+
 volumes:
   datalake:
   warehouse:
+  spark-worker-data:
 
+
+# Test with:
+# docker-compose build
+# docker-compose up
+# docker-compose down
+# docker-compose exec extractor bash
+# docker-compose up -d
+# docker-compose up --scale spark-worker=3
