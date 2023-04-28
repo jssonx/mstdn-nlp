@@ -95,7 +95,7 @@ def main():
             # Save TF-IDF matrix to Parquet file
             df.write.mode("append").parquet(WAREHOUSE_PATH)
 
-            df.show(3)
+            df.show(2)
 
             # Remove processed file
             os.remove(file_path)
