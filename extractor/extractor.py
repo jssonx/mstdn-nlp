@@ -5,7 +5,7 @@ import os
 
 # DATA_LAKE_PATH = "."
 DATA_LAKE_PATH = "/opt/datalake/"
-SLEEP_TIME = 10
+SLEEP_TIME = 30
 
 MASTODON_SERVERS = [
     "https://mastodon.social/api/v1/timelines/public",

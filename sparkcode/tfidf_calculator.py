@@ -101,7 +101,7 @@ def main():
             os.remove(file_path)
 
         # break
-        time.sleep(3)
+        time.sleep(300)
 
     spark.stop()
 
