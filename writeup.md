@@ -28,12 +28,8 @@ Spark is excellent for batch processing, but it may not be the best fit for low-
 
 To incorporate these systems, consider these steps:
 
-1. **Data Collection**: Set up a real-time data ingestion system like Apache Kafka to collect and store incoming data.
+1. **Result Storage**: Store the processed results in a fast, scalable storage system like Apache Cassandra, Amazon DynamoDB, or Google Cloud Datastore.
 
-2. **Stream Processing**: Use a stream processing system like Apache Flink, Kafka Streams, or Apache Storm to process and analyze data in real-time.
-
-3. **Result Storage**: Store the processed results in a fast, scalable storage system like Apache Cassandra, Amazon DynamoDB, or Google Cloud Datastore.
-
-4. **API Development**: Create a REST API that can query the storage system and return the results quickly to clients.
+2. **API Development**: Create a REST API that can query the storage system and return the results quickly to clients.
 
 By implementing this architecture, you can leverage the strengths of real-time processing systems to improve REST response times and handle online processing tasks more efficiently.
