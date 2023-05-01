@@ -19,5 +19,5 @@ This will start up:
 
 
 # TODOs
-1. Optimize the storage and update methods for Parquet files in the API to eliminate redundant computations.
-2. Support additional Mastodon servers.
+1. Optimize the storage and update methods for Parquet files in the API to eliminate redundant computations. (in progress)
+2. Support additional Mastodon servers. (still need to be implemented)
