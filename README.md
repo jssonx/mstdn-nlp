@@ -16,8 +16,3 @@ This will start up:
 * [Jupyter](http://localhost:8888/) -- This is an instance of JupyterLab that includes the latest Spark.  Inside JupyerLab, you can navigate to `sparkcode/hello-pyspark.ipynb` to see a demonstration of some basic Spark operations on your local cluster.  This should give you a headstart building out your analytics code.
 * [REST](http://localhost:8000) -- This is a starting-point REST service for you to build on.  This uses FastAPI and contains an additional endpoint to demonstrate spark connectivity from the web-service: http://localhost:8000/sparktest
     * Note: You need to run the `hello-pyspark` notebook first before this service works: It depends on some data popupated by this notebook.
-
-
-# TODOs
-1. Optimize the storage and update methods for Parquet files in the API to eliminate redundant computations. (in progress)
-2. Support additional Mastodon servers. (still need to be implemented)
