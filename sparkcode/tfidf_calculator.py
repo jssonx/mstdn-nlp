@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.ml.feature import Tokenizer, StopWordsRemover, CountVectorizer, IDF
+from pyspark.ml.feature import Tokenizer, StopWordsRemover, CountVectorizer, IDF, NGram
 from pyspark.sql.functions import lower, regexp_replace, col
 from pyspark.sql.types import StructType, StructField, StringType, Row
 
@@ -73,6 +73,9 @@ def main():
                 "content"
             )
 
+            # Drop missing values
+            df = df.na.drop(subset=["id", "username", "content"])
+
             # Show the DataFrame
             # df.show(truncate=False)
 
@@ -84,8 +87,15 @@ def main():
             remover = StopWordsRemover(inputCol="tokens", outputCol="filtered")
             df = remover.transform(df)
 
+            # Generate n-grams
+            ngram = NGram(n=2, inputCol="filtered", outputCol="ngrams")
+            df = ngram.transform(df)
             # Compute term frequency and inverse document frequency
-            cv = CountVectorizer(inputCol="filtered", outputCol="tf")
+            cv = CountVectorizer(inputCol="ngrams", outputCol="tf", minDF=2)
+            # cv = CountVectorizer(inputCol="filtered", outputCol="tf") #
+
+            # Compute term frequency and inverse document frequency
+            # cv = CountVectorizer(inputCol="filtered", outputCol="tf")
             cv_model = cv.fit(df)
             df = cv_model.transform(df)
             idf = IDF(inputCol="tf", outputCol="tf_idf")

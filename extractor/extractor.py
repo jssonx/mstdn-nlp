@@ -9,7 +9,9 @@ SLEEP_TIME = 30
 
 MASTODON_SERVERS = [
     "https://mastodon.social/api/v1/timelines/public",
-    "https://fosstodon.org/api/v1/timelines/public"
+    "https://fosstodon.org/api/v1/timelines/public",
+    "https://mastodon.online/api/v1/timelines/public",
+    "https://mastodon.xyz/api/v1/timelines/public"
 ]
 
 def fetch_and_save(server, path):

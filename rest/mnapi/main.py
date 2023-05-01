@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 from pyspark.ml.linalg import VectorUDT
@@ -66,7 +66,7 @@ def get_tfidf_for_user(user_id: str):
 
     target_row = tfidf_pd.loc[tfidf_pd['id'] == user_id]
     if target_row.empty:
-        return {}
+        raise HTTPException(status_code=404, detail="The user does not exist. Please enter a valid user ID.")
     vocabulary = target_row['filtered'].values[0]
     tfidf_values = target_row['tf_idf'].values[0]
     tfidf_dict = dict(zip(vocabulary, tfidf_values))
@@ -91,6 +91,10 @@ def get_nearest_neighbors(user_id: str, k: int = 10):
         all_vocabulary.update(vocab)
     all_vocabulary = list(all_vocabulary)
 
+    target_row = tfidf_pd.loc[tfidf_pd['id'] == user_id]
+    if target_row.empty:
+        raise HTTPException(status_code=404, detail="The user does not exist. Please enter a valid user ID.")
+
     # Initialize the matrix with zeros
     num_users = len(tfidf_pd)
     num_features = len(all_vocabulary)
@@ -104,7 +108,6 @@ def get_nearest_neighbors(user_id: str, k: int = 10):
             col_index = all_vocabulary.index(word)
             tf_idf_matrix[index, col_index] = value
 
-    target_row = tfidf_pd.loc[tfidf_pd['id'] == user_id]
     target_index = target_row.index[0]
     target_tfidf_array = tf_idf_matrix[target_index].reshape(1, -1)
     cosine_distances = cosine_similarity(target_tfidf_array, tf_idf_matrix)
