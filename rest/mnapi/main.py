@@ -5,7 +5,7 @@ from pyspark.ml.linalg import VectorUDT
 from sklearn.metrics.pairwise import cosine_similarity
 import uvicorn
 import numpy as np
-from typing import Union, List, Dict, Any # for Swagger API
+from typing import Union, List, Dict, Any # for Swagger 
 
 app = FastAPI()
 
@@ -39,9 +39,8 @@ spark = SparkSession.builder \
 tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
 
 # http://localhost:8000/api/v1/accounts/
-# @app.get("/api/v1/accounts/")
-@app.get("/api/v1/accounts/", response_model=List[Dict[str, Union[str, int]]]) # for Swagger API
-
+# @app.get("/api/v1/accounts/", response_model=List[Dict[str, Union[str, int]]]) # for Swagger API
+@app.get("/api/v1/accounts/")
 def get_accounts():
     # Read Parquet file with the defined schema
     tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
@@ -52,6 +51,7 @@ def get_accounts():
 
 
 # http://localhost:8000/api/v1/tf-idf/user-ids/109429260801289174
+# @app.get("/api/v1/tf-idf/user-ids/{user_id}", response_model=Dict[str, float]) # for Swagger API
 @app.get("/api/v1/tf-idf/user-ids/{user_id}")
 def get_tfidf_for_user(user_id: str):
     # Read Parquet file with the defined schema
@@ -78,9 +78,8 @@ def get_tfidf_for_user(user_id: str):
 
 
 # # http://localhost:8000/api/v1/tf-idf/user-ids/109429260801289174/neighbors
-@app.get("/api/v1/tf-idf/user-ids/{user_id}/neighbors", response_model=List[str]) # for Swagger API
-
-
+# @app.get("/api/v1/tf-idf/user-ids/{user_id}/neighbors", response_model=List[str]) # for Swagger API
+@app.get("/api/v1/tf-idf/user-ids/{user_id}/neighbors")
 def get_nearest_neighbors(user_id: str, k: int = 10):
     # Read Parquet file with the defined schema
     tfidf_df = spark.read.schema(schema).parquet(WAREHOUSE_PATH)
