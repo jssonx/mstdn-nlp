@@ -18,9 +18,6 @@ def main():
         .config("spark.cores.max", 2) \
         .config("spark.sql.warehouse.dir", WAREHOUSE_PATH) \
         .getOrCreate()
-    # spark = SparkSession.builder \
-    #     .appName("TF-IDF Calculator") \
-    #     .getOrCreate()
 
     while True:
         files = os.listdir(DATA_LAKE_PATH)
@@ -76,9 +73,6 @@ def main():
             # Drop missing values
             df = df.na.drop(subset=["id", "username", "content"])
 
-            # Show the DataFrame
-            # df.show(truncate=False)
-
             # Preprocess data
             df = df.select("id", "username", lower(col("content")).alias("content"))
             df = df.withColumn("content", regexp_replace("content", "[^a-zA-Z0-9\\s,.!?]", ""))
@@ -90,12 +84,11 @@ def main():
             # Generate n-grams
             ngram = NGram(n=2, inputCol="filtered", outputCol="ngrams")
             df = ngram.transform(df)
+            
             # Compute term frequency and inverse document frequency
             cv = CountVectorizer(inputCol="ngrams", outputCol="tf", minDF=2)
-            # cv = CountVectorizer(inputCol="filtered", outputCol="tf") #
 
-            # Compute term frequency and inverse document frequency
-            # cv = CountVectorizer(inputCol="filtered", outputCol="tf")
+            # Fit the model and calculate the tfidf
             cv_model = cv.fit(df)
             df = cv_model.transform(df)
             idf = IDF(inputCol="tf", outputCol="tf_idf")
